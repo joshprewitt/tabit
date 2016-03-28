@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#Initialize variables to default values.
+TABFILE="$HOME/.tabit"
+NEWWINDOW=1
+
+#Set fonts for Help.
+NORM=$(tput sgr0)
+BOLD=$(tput bold)
+
+
+#Help function
+function HELP {
+  echo -e \\n"${BOLD}Help documentation for tabit${NORM}"\\n
+  echo -e "${BOLD}Basic usage: ${NORM}tabit [options] <start of URL with trailing slash> [Remainder of URL with leading slash]"\\n
+  echo "${BOLD}Options:${NORM}"
+  echo "${BOLD}-f${NORM} <path to file>. -- File to read variables from. Default is ~/.tabit"
+  echo "${BOLD}-c${NORM} -- Use Current Window."
+  exit 1
+}
+
+#Check the number of arguments. If none are passed, print help and exit.
+NUMARGS=$#
+if [ $NUMARGS -eq 0 ]; then
+  HELP
+fi
+
+### Start getopts code ###
+
+#Parse command line flags
+#If an option should be followed by an argument, it should be followed by a ":".
+#Notice there is no ":" after "h". The leading ":" suppresses error messages from
+#getopts. This is required to get my unrecognized option code to work.
+
+while getopts :f:ch FLAG; do
+  case $FLAG in
+    f)  #set option for custom file
+      TABFILE=$OPTARG
+      ;;
+    c)  #set option for current window
+      NEWWINDOW=0
+      ;;
+    h)  #show help
+      HELP
+      ;;
+    \?) #unrecognized option - show help
+      echo -e \\n"Option $OPTARG not allowed."
+      HELP
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))  #This tells getopts to move on to the next argument.
+
+
+#Call Chrome by itself. This will create a new window instead of hijacking the existing one.
+if [ $NEWWINDOW -eq 1 ]; then
+  /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome
+fi
+
+### Actually Open The Tabs ###
+while read line; do open -a /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome $1$line$2; done < $TABFILE
+
